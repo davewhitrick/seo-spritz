@@ -149,6 +149,7 @@
 
     <div class="controls">
       <button id="refreshBtn">Refresh</button>
+      <button id="clearBtn">Clear all orders</button>
       <span>Auto-refreshes every 15s</span>
       <a class="back" href="/" style="margin-left:auto">← Menu</a>
     </div>
@@ -196,6 +197,36 @@ function startDashboard(){
   loadOrders();
   timer=setInterval(loadOrders,15000);
   document.getElementById('refreshBtn').addEventListener('click',loadOrders);
+
+  const clearBtn=document.getElementById('clearBtn');
+  let armed=false, armTimer=null;
+  clearBtn.addEventListener('click',async ()=>{
+    if(!armed){
+      // first tap: arm and ask for confirmation
+      armed=true;
+      clearBtn.textContent='Tap again to confirm';
+      clearBtn.style.borderColor='var(--wine)';
+      clearBtn.style.color='var(--cream)';
+      armTimer=setTimeout(()=>{
+        armed=false;
+        clearBtn.textContent='Clear all orders';
+        clearBtn.style.borderColor='';clearBtn.style.color='';
+      },4000);
+      return;
+    }
+    // second tap: actually clear
+    clearTimeout(armTimer);
+    armed=false;
+    clearBtn.disabled=true;
+    clearBtn.textContent='Clearing…';
+    try{
+      await fetch('/api/clear',{method:'POST'});
+    }catch(e){ /* ignore */ }
+    clearBtn.disabled=false;
+    clearBtn.textContent='Clear all orders';
+    clearBtn.style.borderColor='';clearBtn.style.color='';
+    loadOrders();
+  });
 }
 
 async function loadOrders(){
